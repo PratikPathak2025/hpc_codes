@@ -1,24 +1,38 @@
+// ============================================================================
+// Program: Parallel Depth-First Search (DFS) using OpenMP
+// Description: Traverses an undirected graph using recursive DFS where outgoing
+//              branches of a node are explored concurrently using OpenMP threads.
+// ============================================================================
+
 #include <iostream>
 #include <vector>
 #include <omp.h>
 using namespace std;
 
+// Maximum number of vertices supported
 const int MAXN = 100000;
+
+// Graph representation: Adjacency list and visited status array
 vector<int> adj[MAXN + 5];
 bool visited[MAXN + 5];
 
+// Recursive Depth-First Search with parallel branch exploration
 void dfs(int node) {
     visited[node] = true;
-    #pragma omp critical
 
+    // Critical section to prevent concurrent threads from corrupting console output
+    #pragma omp critical
     cout << node << " ";
 
+    // Parallelize the traversal of outgoing edges / adjacent neighbors
     #pragma omp parallel for
     for (int i = 0; i < adj[node].size(); i++) {
         int next = adj[node][i];
 
         bool do_visit = false;
 
+        // Critical section: atomic check-and-set on the visited array
+        // Prevents multiple threads from simultaneously visiting the same neighbor
         #pragma omp critical
         {
             if (!visited[next]) {
@@ -27,6 +41,7 @@ void dfs(int node) {
             }
         }
 
+        // Recursively visit the neighbor if successfully claimed by this thread
         if (do_visit) {
             dfs(next);
         }
@@ -34,9 +49,11 @@ void dfs(int node) {
 }
 
 int main() {
+    // n = number of vertices, m = number of edges
     int n, m;
     cin >> n >> m;
 
+    // Read edges and build undirected adjacency list
     for (int i = 0; i < m; i++) {
         int u, v;
         cin >> u >> v;
@@ -44,19 +61,20 @@ int main() {
         adj[v].push_back(u);
     }
 
+    // Source vertex to initiate DFS traversal
     int start;
     cin >> start;
 
+    // Execute parallel DFS starting from the source node
     dfs(start);
 
     return 0;
 }
 
-
-// INPUT:
-// 5 4
-// 1 2
-// 1 3
-// 2 4
-// 3 5
-// 1
+// Sample Input Format:
+// 5 4         -> 5 nodes, 4 edges
+// 1 2         -> Edge between 1 and 2
+// 1 3         -> Edge between 1 and 3
+// 2 4         -> Edge between 2 and 4
+// 3 5         -> Edge between 3 and 5
+// 1           -> Starting vertex for DFS
