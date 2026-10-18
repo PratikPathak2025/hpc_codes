@@ -99,3 +99,12 @@ int main() {
 // 1 3         -> Edge between 1 and 3
 // 2 4         -> Edge between 2 and 4
 // 3 5         -> Edge between 3 and 5
+1
+2
+3
+4
+5
+6
+7
+8
+9
